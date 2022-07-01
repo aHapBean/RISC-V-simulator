@@ -2,7 +2,7 @@
 #define CPU_HPP
 
 #include <bits/stdc++.h>
-#include "buffer_stages.hpp"
+#include "stages.hpp"
 #include "global.hpp"
 
 using u32 = unsigned int;

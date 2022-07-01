@@ -38,7 +38,7 @@ public:
         if(OPcode == 0b1100011 && (PHT_VALUE & 0b10))return BTB_VALUE;
         return iniPC + 4;
     }
-	//区分 0x and 0b !!!!!! 
+	//区分 0x and 0b !!!!!!
     void update(bool BranchTaken,bool isSuc,u32 iniPC,u32 jumpAddr){//针对分支命令分支是否被采纳
         if(isSuc)++suc;
         ++cnt;
@@ -65,7 +65,6 @@ public:
         memset(BHT,0,sizeof(BHT));
         memset(BTB,0,sizeof(BTB));
     }
-
     
     ~predictor(){
     	if(cnt == 0)printf("no Branch");

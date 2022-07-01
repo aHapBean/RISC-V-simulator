@@ -9,14 +9,6 @@
 using u32 = unsigned int;
 using u8  = unsigned char;
 
-/*
-extern u8 mem[500000];
-extern u32 reg[32];
-extern u32 PC;      //仅是声明
-extern u32 clk;
-extern bool eesc;
-*/
-
 u32 discard_clk;
 class predictor pred;
 namespace STAGE{

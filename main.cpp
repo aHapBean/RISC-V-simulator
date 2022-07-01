@@ -1,8 +1,7 @@
-//RISCV.cpp
 #include <iostream>
 #include <cstring>
 #include <fstream>
-#include "my_cpu.hpp"
+#include "cpu.hpp"
 
 
 void init(cpu * &RISCV){
