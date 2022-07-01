@@ -4,7 +4,7 @@
 #include "global.hpp"
 #include "predictor.hpp"
 
-#define funct3B 0b00000000000000000111000000000000   //define funct 3
+#define funct3B 0b00000000000000000111000000000000
 
 using u32 = unsigned int;
 using u8  = unsigned char;
@@ -13,8 +13,8 @@ u32 discard_clk;
 class predictor pred;
 namespace STAGE{
     u32 STALL_post_D_F_W_bubble,discard_flag;   //flag
-    object_num out_obn;             //op object
-    IF_ID_buffer IF_ID,res_IF_ID;   //buffer
+    object_num out_obn;                         //op object
+    IF_ID_buffer IF_ID,res_IF_ID;               //buffer
 	ID_EX_buffer ID_EX,res_ID_EX;
 	EX_MEM_buffer EX_MEM,res_EX_MEM;
 	MEM_WB_buffer MEM_WB,res_MEM_WB;
@@ -34,14 +34,14 @@ void Wpreforwarding(u32 regd,u32 rd){
     ID_EX.Wfregd = regd;
 }
 void forwarding(){
-    //STALL 后的forwarding
+    //the forwarding after STALL
     if(STALL_post_D_F_W_bubble){
         if(ID_EX.Mfrd != 0 && ID_EX.rs1 == ID_EX.Mfrd)ID_EX.reg1 = ID_EX.Mfregd;
         if(ID_EX.Mfrd != 0 && ID_EX.rs2 == ID_EX.Mfrd)ID_EX.reg2 = ID_EX.Mfregd;
         STALL_post_D_F_W_bubble = 0;
         return ;
     }
-    //0特判 !
+    //watch the zero !
     if(ID_EX.Wfrd != 0 && ID_EX.rs1 == ID_EX.Wfrd)ID_EX.reg1 = ID_EX.Wfregd; 
     if(ID_EX.Wfrd != 0 && ID_EX.rs2 == ID_EX.Wfrd)ID_EX.reg2 = ID_EX.Wfregd;
                                                                                     
@@ -49,35 +49,35 @@ void forwarding(){
     if(ID_EX.Mfrd != 0 && ID_EX.rs2 == ID_EX.Mfrd)ID_EX.reg2 = ID_EX.Mfregd;
 
     if(ID_EX.ld_flag && ID_EX.Efrd != 0 && (ID_EX.rs1 == ID_EX.Efrd || ID_EX.rs2 == ID_EX.Efrd)) {
-		STALL_post_D_F_W_bubble = 1;//确实需要停顿
-    } else {    //假如stall过了，那么留下的是两组 stall过的，此时MEM传过来的反而有用
+		STALL_post_D_F_W_bubble = 1;
+    } else {
         if(ID_EX.Efrd != 0 && ID_EX.rs1 == ID_EX.Efrd)ID_EX.reg1 = ID_EX.Efregd;
         if(ID_EX.Efrd != 0 && ID_EX.rs2 == ID_EX.Efrd)ID_EX.reg2 = ID_EX.Efregd;
         STALL_post_D_F_W_bubble = 0;    //remember to do this
-    }//EX一定保持在后面更新
+    }//keep the EX forwarding later
 }
 
 
     /*update & discard*/
 void updateALL(){
-    if(discard_flag == 2 || STALL_post_D_F_W_bubble && discard_flag)printf("FUCKKKKKKKKKKKK\n\n\n");
-    if(discard_flag && discard_clk == clk){
+    if(discard_flag == 2 || STALL_post_D_F_W_bubble && discard_flag)printf("false\n");
+    if(discard_flag && discard_clk == virtual_clk){
     	PC = res_EX_MEM.iniPC;//
         res_IF_ID.obn = none;
         res_ID_EX.obn = none;
     }
-    if(discard_flag && discard_clk == clk - 1){
+    if(discard_flag && discard_clk + 1 == virtual_clk){
         //res_ID_EX.obn = none;// EX MEM
         res_EX_MEM.obn = none;
     }
     
-    if(discard_flag && discard_clk + 2 == clk){
+    if(discard_flag && discard_clk + 2 == virtual_clk){
         //res_EX_MEM.obn = none;// MEM WB
-        res_MEM_WB.obn = none;//最后一个不用管，因为MEM没跑，它没更新
-        discard_flag = 0;//控制下一个周期，可以重新开始
+        res_MEM_WB.obn = none;
+        discard_flag = 0;
     }
 
-    if(STALL_post_D_F_W_bubble){EX_MEM.obn = none;}//MEM不操作，IF_ID，"PC_IF",ID_EX不动 ! !
+    if(STALL_post_D_F_W_bubble){EX_MEM.obn = none;}//the update after the STALL operation.
     else {
         IF_ID = res_IF_ID;
         ID_EX = res_ID_EX;
@@ -151,6 +151,16 @@ void RES_MEM_WB_up(object_num obn,
 }
 
 
+bool isBranch(OPflag opflag){
+    switch (opflag) {
+        case BEQ:case BNE:case BLT:case BGE:case BLTU:case BGEU:
+            return true;
+        default:
+            return false;
+    }
+}
+
+
 /*5 Stages*/
     /*Instruction Fetch*/
 void IF(){
@@ -159,7 +169,6 @@ void IF(){
     if(STALL_post_D_F_W_bubble){return ;}
 
     u32 code = 0b0,iniPC = PC,predPC;
-	IF_ID.code = 0b0;
     for(int i = 0;i < 4; ++i){
         code |= (mem[PC + 3 - i] & 0b11111111);
         if(i != 3)code <<= 8;       //     不能左移四次，因为第一次不用移！！ 
@@ -252,7 +261,7 @@ void ID(){
                 case 0b111:
                     opflag = ANDI;break;
                 case 0b001:
-                    opflag = SLLI;break;//it has funct7
+                    opflag = SLLI;break;
                 case 0b101:
                     u32 funct7 = (code & 0b11111110000000000000000000000000);//0b11111110'00000000'00000000'00000000
                     funct7 >>= 25;
@@ -309,7 +318,7 @@ void ID(){
     
     u32 rd = 0b0,rs1 = 0b0,rs2 = 0b0,imm = 0b0,flag = 0b0,shamt = 0b0;
 
-    //几种解码
+    //decode
     switch (opflag) {
 
 //U
@@ -433,15 +442,6 @@ void ID(){
     RES_ID_EX_up(obn,rd,rs1,rs2,imm,shamt,reg[rd],reg[rs1],reg[rs2],IF_ID.iniPC,IF_ID.predPC,opflag);
 }
 
-bool isBranch(OPflag opflag){
-    switch (opflag) {
-        case BEQ:case BNE:case BLT:case BGE:case BLTU:case BGEU:
-            return true;
-        default:
-            return false;
-    }
-}
-
     /*Execute*/
 void EX(){
     object_num obn = ID_EX.obn;
@@ -463,7 +463,7 @@ void EX(){
     bool BranchTaken = false;
 
     u32 ld_dest = 0b0,st_dest = 0b0,ld_flag = 0,st_flag = 0;
-    EX_MEM.esc_flag = 0;
+    EX_MEM.esc_flag = 0;    //!!
     bool ok = false;
 
     switch (opflag) {
@@ -510,12 +510,12 @@ void EX(){
             regd = reg1 + imm;
             break;
 
-        case SLTI:      //set less than imm
+        case SLTI:     
             if((int)reg1 < (int)imm)regd = 1;
             else regd = 0;
             break;
 
-        case SLTIU:     //set less than imm unsigned
+        case SLTIU:     
             if(reg1 < imm)regd = 1;
             else regd = 0;
             break;
@@ -530,7 +530,7 @@ void EX(){
             regd = reg1 & imm;
             break;
             
-        case SLLI:      //shift left logical imm   
+        case SLLI:    
             regd = reg1 << shamt;
             break;
         case SRLI:
@@ -545,10 +545,10 @@ void EX(){
         case SUB:
             regd = reg1 - reg2;
             break;
-        case SLL:       //shift left locical
+        case SLL:       
             regd = reg1 << reg2;
             break;
-        case SLT:       //set less than
+        case SLT:      
             regd = ((int)reg1 < (int)reg2) ? 1 : 0;
             break;
         case SLTU:
@@ -557,7 +557,7 @@ void EX(){
         case XOR:
             regd = reg1 ^ reg2;
             break;
-        case SRL:       //shift right locical
+        case SRL:    
             regd = reg1 >> reg2;
             break;
         case OR:
@@ -567,12 +567,14 @@ void EX(){
             regd = reg1 & reg2;
             break;
     }
+    clk += 2; // simulate the real MEM in the cpu.
 
     if(!ok)iniPC += 4;
     if(iniPC != predPC){
         ++discard_flag;
-        discard_clk = clk;
+        discard_clk = virtual_clk;
     }
+
         /*update the predictor*/
     bool isSuc = (iniPC == predPC) ? true : false;
     if(isBranch(opflag)){
@@ -608,7 +610,7 @@ void MEM(){
                 regd = (u32)mem[ld_dest];        
                 if(((u32)mem[ld_dest] & 0b10000000)){
                     regd |= 0b11111111111111111111111100000000;//0b11111111'11111111'11111111'00000000;
-                }//符号位扩展
+                }
                 break;
 
             case LH:    
@@ -616,12 +618,12 @@ void MEM(){
                 regd |= (u32)mem[ld_dest];
                 if(((u32)regd & 0b1000000000000000)){//two byte
                     regd |= 0b11111111111111110000000000000000;//0b11111111'11111111'00000000'00000000;
-                }//符号位扩展
+                }
                 break;
 
             case LW:
                 regd = 0b0;
-                for(int i = 0;i < 4; ++i){//右边的先下来 
+                for(int i = 0;i < 4; ++i){
                     regd |= mem[ld_dest + 3 - i];       
                     if(i != 3)regd <<= 8;
                 }
@@ -688,7 +690,7 @@ void WB(){
             }
             reg[rd] = regd;
     }
-    reg[0] = 0; //       big fault!
+    reg[0] = 0;
 }
 
 }
@@ -696,23 +698,16 @@ void WB(){
 /*
 错误汇总:
 1.obn = one;
-
 2.buffer中obn传递漏写
-
 3.forwarding if(rd ? Mfrd ? Wfrd ? or Efrd)
 especially the rd and Efrd ! (the last fault)
-
 4.esc_flag in the EX_MEM (directly) //but in the MEM_WB ,it's normal.
-
 5.stall bubbles ,a "global" variable (the additional MEM)
 and discard-> discard_clk ! in update !
-
-
 6.forwarding特判
-
 之前的错误(单指令) 
 7.ld_flag !忘传
-
 8.reg[0]未置零
 在此代码传递中，中午没有进行reg[0]特判，需要注意用到这种不合法的值
+9.IF_ID.code = 0b0; !!!!!!!!!!!!
 */

@@ -5,7 +5,6 @@
 using u32 = unsigned int;
 using u8  = unsigned char;
 
-
 //#define BHT_VALUE (BHT[iniPC & 0b111111111f])
 #define BTB_VALUE (BTB[iniPC & 0b111111111])
 #define OPcode (code & 0b1111111)
@@ -16,7 +15,7 @@ extern double rate;
 class predictor{
     u32 suc,cnt;
     u8 BHT[512];
-    u8 PHT[512][128];
+    u8 PHT[512][64];
     u32 BTB[512];
 
 public:
@@ -37,8 +36,7 @@ public:
     int predict(u32 code,u32 iniPC){
         if(OPcode == 0b1100011 && (PHT_VALUE & 0b10))return BTB_VALUE;
         return iniPC + 4;
-    }
-	//区分 0x and 0b !!!!!!
+    }//区分 0x and 0b !!!!!!
     void update(bool BranchTaken,bool isSuc,u32 iniPC,u32 jumpAddr){//针对分支命令分支是否被采纳
         if(isSuc)++suc;
         ++cnt;

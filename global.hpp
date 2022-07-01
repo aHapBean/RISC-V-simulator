@@ -8,6 +8,7 @@ u8 mem[500000];
 u32 reg[32];
 u32 PC;
 u32 clk;
+u32 virtual_clk;
 bool eesc;
 
 
@@ -42,7 +43,8 @@ struct ID_EX_buffer {
     object_num obn;
     u32 rd,rs1,rs2;   
     u32 iniPC,predPC;               
-    u32 regd,reg1,reg2,imm,shamt,Mfregd,Mfrd,Efregd,Efrd,Wfregd,Wfrd,ld_flag;
+    u32 regd,reg1,reg2,imm,shamt,
+        Mfregd,Mfrd,Efregd,Efrd,Wfregd,Wfrd,ld_flag;
     OPflag opflag;      //OPflag
     ID_EX_buffer(){rs1 = rs2 = rd = imm = Mfregd = Mfrd = Efregd = Wfregd = Wfrd = ld_flag = Efrd = 0;}
     ID_EX_buffer& operator=(const ID_EX_buffer &t){

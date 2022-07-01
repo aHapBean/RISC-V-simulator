@@ -8,8 +8,6 @@
 using u32 = unsigned int;
 using u8  = unsigned char;
 
-u32 all_empty_flag;
-
 class cpu{
 public:
 cpu(){
@@ -19,9 +17,8 @@ cpu(){
     STAGE::discard_flag = 0;
     PC = 0;
     clk = 0;
-    all_empty_flag = 1;
+    virtual_clk = 0;
 }
-
 ~cpu(){}
 
 void init(std::istream &in){
@@ -42,10 +39,11 @@ void init(std::istream &in){
         in>>s;
     }
 }
-
 void set(){
-	STAGE::IF_ID.obn = STAGE::ID_EX.obn = STAGE::EX_MEM.obn = STAGE::MEM_WB.obn = none;
-    STAGE::res_IF_ID.obn = STAGE::res_ID_EX.obn = STAGE::res_EX_MEM.obn = STAGE::res_MEM_WB.obn = none;
+	STAGE::IF_ID.obn = STAGE::ID_EX.obn = 
+    STAGE::EX_MEM.obn = STAGE::MEM_WB.obn = 
+    STAGE::res_IF_ID.obn = STAGE::res_ID_EX.obn = 
+    STAGE::res_EX_MEM.obn = STAGE::res_MEM_WB.obn = none;
 }
 void pipeRUN(){
     set();
@@ -53,6 +51,7 @@ void pipeRUN(){
 	eesc = false;
     while(1){
         clk++;
+        virtual_clk++;
         STAGE::ID();
         STAGE::MEM();
         STAGE::WB();

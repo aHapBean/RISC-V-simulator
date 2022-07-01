@@ -3,7 +3,6 @@
 #include <fstream>
 #include "cpu.hpp"
 
-
 void init(cpu * &RISCV){
     RISCV->init(std::cin);
 }
