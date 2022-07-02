@@ -21,16 +21,16 @@
 
 | 缩写       | 全称                 | 说明                     |
 | ---------- | -------------------- | ------------------------ |
+| **OPCODE** | Operation Code       |                          |
+| **RD**     | Register Destination | 将写入的寄存器序号       |
+| **IMM**    | Immediate            | 立即数,imm or shamt     |
 | **PC**     | Program Counter      | 待执行的下一条指令地址   |
 | *iniPC*       | Initail PC  | 指令初始取址位置             |
 | *predPC*       | Predicted PC  | 该指令（预测）的下一个取址位置             |
 | *code*    | Insturction          | 32位指令                |
 | *opflag*| Operation Flag| 枚举类型用于区分37种指令|
-| **OPCODE** | Operation Code       |                          |
 | *RS*     | Register Source      | 读取值的寄存器序号,rs1,rs2       |
-| **RD**     | Register Destination | 将写入的寄存器序号       |
 | *regd,reg1,reg2*| Register Value       | 获取的寄存器值,分别对应reg[rd],reg[rs1],reg[rs2]           |
-| **IMM**    | Immediate            | 立即数,imm or shamt     |
 
 
 ## 五级流水测试情况
@@ -74,7 +74,8 @@ main函数:
 
     - update
         - result buffer update
-            - `RES_XX_up()`
+            - `RES_XX_buffer_up()`
+        - put the result buffer to the real buffer    
             - `updateALL()`
 
 ### **predictor.hpp**
@@ -87,9 +88,18 @@ main函数:
         - `predict()` for predicting
         - `update()` for updating
 
-**二级自适应预测器介绍以及预测结果展示**
+**二级分支预测介绍以及预测结果展示**
+- 介绍
+    - 说明 取 **PC后9位**为索引下标
+    - 数据成员
+        - `BHT[512]` branch history table.记录PC对应的历史状态，对同一PC值，至多记录64种状态，即*6位*
+        - `PHT[512][64]` Patern history table.每一个PC对应的历史状态所对应的跳转情况，是**二位饱和计数器**，分为`00` `01` `10` `11`四种状态，即分别为 `Strongly not taken` `Weekly not taken` `Weekly taken` `Strongly taken`,*PHT* >= 2表示需要跳转
+        - ` BTB[512]` Branch target buffer.预测阶段时，目标跳转地址
+    - 基本过程
+        - 在 `IF` 阶段进行分支预测,通过`PC`获取当前历史状态`BHT`,进而获取当前预测跳转状态`PHT`,如果(指令为 `Branch` 型 *&&* 相应*PHT* >= 2) 则跳转，跳转地址为 `PC + BTB `
+        - 在`EX` 阶段对跳转结果以及预测正确性进行回传，通过 `isBranchTaken`以及`jump Address` `PC` 对*BHT(历史状态)* *PHT(预测跳转状态)* *BTB(预测跳转地址)*进行更新
 
-
+- 结果展示
 | 数据点 | 成功率 | 预测成功次数 | 预测总次数 |
 | :----: | :----: | :----: | :----: |
 |array_test1|50.00%|11|22|
