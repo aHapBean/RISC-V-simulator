@@ -93,13 +93,14 @@ main函数:
     - 说明 取 **PC后9位**为索引下标
     - 数据成员
         - `BHT[512]` branch history table.记录PC对应的历史状态，对同一PC值，至多记录64种状态，即*6位*
-        - `PHT[512][64]` Patern history table.每一个PC对应的历史状态所对应的跳转情况，是**二位饱和计数器**，分为`00` `01` `10` `11`四种状态，即分别为 `Strongly not taken` `Weekly not taken` `Weekly taken` `Strongly taken`,*PHT* >= 2表示需要跳转
-        - ` BTB[512]` Branch target buffer.预测阶段时，目标跳转地址
+        - `PHT[512][64]` Patern history table.每一个PC对应的历史状态所对应的跳转情况，是**二位饱和计数器**，分为`00` `01` `10` `11`四种状态，分别对应 `Strongly not taken` `Weekly not taken` `Weekly taken` `Strongly taken`,*PHT* >= 2表示需要跳转
+        - ` BTB[512]` Branch target buffer.目标预测跳转地址
     - 基本过程
         - 在 `IF` 阶段进行分支预测,通过`PC`获取当前历史状态`BHT`,进而获取当前预测跳转状态`PHT`,如果(指令为 `Branch` 型 *&&* 相应*PHT* >= 2) 则跳转，跳转地址为 `PC + BTB `
-        - 在`EX` 阶段对跳转结果以及预测正确性进行回传，通过 `isBranchTaken`以及`jump Address` `PC` 对*BHT(历史状态)* *PHT(预测跳转状态)* *BTB(预测跳转地址)*进行更新
+        - 在`EX` 阶段对跳转结果以及预测正确性进行回传，通过 `isBranchTaken`以及`jump Address` `PC` 对`BHT(历史状态)` `PHT(预测跳转状态)` `BTB(预测跳转地址)`进行更新
 
 - 结果展示
+
 | 数据点 | 成功率 | 预测成功次数 | 预测总次数 |
 | :----: | :----: | :----: | :----: |
 |array_test1|50.00%|11|22|
