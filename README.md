@@ -99,7 +99,7 @@ main函数:
         - `PHT[512][64]` Patern history table.每一个PC对应的历史状态所对应的跳转情况，是**二位饱和计数器**，分为`00` `01` `10` `11`四种状态，分别对应 `Strongly not taken` `Weekly not taken` `Weekly taken` `Strongly taken`,*PHT* >= 2表示需要跳转
         - ` BTB[512]` Branch target buffer.目标预测跳转地址
     - 基本过程
-        - 在 `IF` 阶段进行分支预测,通过`PC`获取当前历史状态`BHT`,进而获取当前预测跳转状态`PHT`,如果(指令为 `Branch` 型 *&&* 相应*PHT* >= 2) 则跳转，跳转地址为 `PC + BTB `
+        - 在 `IF` 阶段进行分支预测,通过`PC`获取当前历史状态`BHT`,进而获取当前预测跳转状态`PHT`,如果( 指令为 `Branch` 型 *&&* 对应*PHT* >= 2 ) 则跳转，跳转地址为 `PC + BTB `
         - 在`EX` 阶段对跳转结果以及预测正确性进行回传，通过 `isBranchTaken`以及`jump Address` `PC` 对`BHT(历史状态)` `PHT(预测跳转状态)` `BTB(预测跳转地址)`进行更新
 
 - 结果展示
