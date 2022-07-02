@@ -1,10 +1,8 @@
 #ifndef PREDICTOR_HPP
 #define PREDICTOR_HPP
 #include <cstring>
-#include <iostream>
 using u32 = unsigned int;
 using u8  = unsigned char;
-
 //#define BHT_VALUE (BHT[iniPC & 0b111111111f])
 #define BTB_VALUE (BTB[iniPC & 0b111111111])
 #define OPcode (code & 0b1111111)

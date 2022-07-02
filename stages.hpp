@@ -1,6 +1,6 @@
 #ifndef BUFFER_STAGES_HPP
 #define BUFFEr_StAGES_HPP
-#include  <bits/stdc++.h>
+
 #include "global.hpp"
 #include "predictor.hpp"
 

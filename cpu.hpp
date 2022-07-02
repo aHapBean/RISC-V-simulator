@@ -1,10 +1,9 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
-#include <bits/stdc++.h>
 #include "stages.hpp"
 #include "global.hpp"
-
+#include <algorithm>
 using u32 = unsigned int;
 using u8  = unsigned char;
 
