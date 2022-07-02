@@ -54,7 +54,6 @@ void pipeRUN(){
     while(1){
         clk++;
         STAGE::updateALL();
-        virtual_clk++;
         /*
         STAGE::ID();
         STAGE::MEM();
@@ -63,6 +62,7 @@ void pipeRUN(){
         STAGE::EX();        
         STAGE::IF();
         */
+        virtual_clk++;
         std::random_shuffle(p,p+5);
         p[0]();p[1]();p[2]();p[3]();p[4]();
         if(eesc)break;
