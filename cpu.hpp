@@ -45,6 +45,7 @@ void set(){
     STAGE::res_IF_ID.obn = STAGE::res_ID_EX.obn = 
     STAGE::res_EX_MEM.obn = STAGE::res_MEM_WB.obn = none;
 }
+void (*p[5])() = {STAGE::IF,STAGE::ID,STAGE::EX,STAGE::MEM,STAGE::WB};
 void pipeRUN(){
     set();
     extern bool eesc;
@@ -52,12 +53,16 @@ void pipeRUN(){
     while(1){
         clk++;
         virtual_clk++;
+        /*
         STAGE::ID();
         STAGE::MEM();
         STAGE::WB();
         //MEM/WB
         STAGE::EX();        
         STAGE::IF();
+        */
+        std::random_shuffle(p,p+5);
+        p[0]();p[1]();p[2]();p[3]();p[4]();
         STAGE::updateALL();
         if(eesc)break;
     }
