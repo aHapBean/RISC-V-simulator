@@ -76,7 +76,7 @@ struct EX_MEM_buffer {
         rd  = t.rd;
         rs1 = t.rs1;
         rs2 = t.rs2;
-        //esc_flag = t.esc_flag; //!!
+        esc_flag = t.esc_flag; //!!
         regd = t.regd;
         iniPC = t.iniPC;
         predPC = t.predPC;

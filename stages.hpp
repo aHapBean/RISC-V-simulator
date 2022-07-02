@@ -12,7 +12,7 @@ using u8  = unsigned char;
 u32 discard_clk;
 class predictor pred;
 namespace STAGE{
-    u32 STALL_post_D_F_W_bubble,discard_flag;   //flag
+    u32 STALL_post_D_F_W_bubble,discard_flag,stall_all = 0,stall_clk = 0;   //flag
     object_num out_obn;                         //op object
     IF_ID_buffer IF_ID,res_IF_ID;               //buffer
 	ID_EX_buffer ID_EX,res_ID_EX;
@@ -62,7 +62,7 @@ void forwarding(){
 void updateALL(){
     if(discard_flag == 2 || STALL_post_D_F_W_bubble && discard_flag)printf("false\n");
     if(discard_flag && discard_clk == virtual_clk){
-    	PC = res_EX_MEM.iniPC;//
+    	PC = res_EX_MEM.iniPC;
         res_IF_ID.obn = none;
         res_ID_EX.obn = none;
     }
@@ -86,10 +86,7 @@ void updateALL(){
     forwarding();
     MEM_WB= res_MEM_WB;//update ！
     
-    res_IF_ID.obn = none;
-    res_ID_EX.obn = none;
-    res_EX_MEM.obn= none;
-    res_MEM_WB.obn= none;
+    res_IF_ID.obn = none;res_ID_EX.obn = none;res_EX_MEM.obn= none;res_MEM_WB.obn= none;
 }
 void RES_IF_ID_up(u32 iniPC,u32 predPC,u32 code,object_num obn){
     res_IF_ID.obn  = obn;
@@ -121,14 +118,14 @@ void RES_ID_EX_up(  object_num obn,
     res_ID_EX.iniPC = iniPC;
     res_ID_EX.predPC = predPC;
 }
-void RES_EX_MEM_up(object_num obn,
+void RES_EX_MEM_up(object_num obn,u32 esc_flag,
                 u32 ld_dest = 0,u32 ld_flag = 0,
                 u32 st_dest = 0,u32 st_flag = 0,
                 u32 regd = 0,u32 reg2 = 0,
                 u32 rd = 0,u32 rs1 = 0,u32 rs2 = 0,
                 u32 iniPC = 0,u32 predPC = 0,
                 OPflag opflag = LUI){
-    res_EX_MEM.obn = obn;
+    res_EX_MEM.obn = obn;res_EX_MEM.esc_flag = esc_flag;
     res_EX_MEM.ld_dest = ld_dest;res_EX_MEM.st_flag = st_flag;
     res_EX_MEM.ld_flag = ld_flag;res_EX_MEM.st_dest = st_dest;
     res_EX_MEM.regd = regd;res_EX_MEM.opflag = opflag;res_EX_MEM.rd = rd;
@@ -160,19 +157,17 @@ bool isBranch(OPflag opflag){
     }
 }
 
-
 /*5 Stages*/
     /*Instruction Fetch*/
 void IF(){
-    //in the mem the info is stored in the form of byte  |u8 !
     object_num obn = one;
-    if(STALL_post_D_F_W_bubble){return ;}
+    if(STALL_post_D_F_W_bubble || (stall_all && (stall_clk == virtual_clk - 1 || stall_clk == virtual_clk - 2))){return ;}
 
     u32 code = 0b0,iniPC = PC,predPC;
     for(int i = 0;i < 4; ++i){
         code |= (mem[PC + 3 - i] & 0b11111111);
-        if(i != 3)code <<= 8;       //     不能左移四次，因为第一次不用移！！ 
-    }//逆读
+        if(i != 3)code <<= 8;
+    }
     predPC = pred.predict(code,PC);
     PC = predPC;                            
     RES_IF_ID_up(iniPC,predPC,code,obn);
@@ -182,7 +177,7 @@ void IF(){
 void ID(){
     object_num obn = IF_ID.obn;
 	
-    if(STALL_post_D_F_W_bubble || obn == none){return ;}
+    if(STALL_post_D_F_W_bubble || obn == none || (stall_all && (stall_clk == virtual_clk - 1 || stall_clk == virtual_clk - 2))){return ;}
 
     u32 funct3 = 0b0,funct7 = 0b0,code = IF_ID.code;
     u32 opcode = (code & 0b1111111);
@@ -320,7 +315,6 @@ void ID(){
 
     //decode
     switch (opflag) {
-
 //U
         case LUI:case AUIPC:
             imm = (code & 0b11111111111111111111000000000000);		//0b11111111'11111111'11110000'00000000
@@ -328,7 +322,6 @@ void ID(){
             rd  = (code & 0b00000000000000000000111110000000);		//0b00000000'00000000'00001111'10000000
             rd >>= 7;
             break;
-
 //UJ
         case JAL:
         	char *tp;
@@ -355,7 +348,6 @@ void ID(){
                 imm |= (0b11111111111100000000000000000000);		//0b11111111'11110000'00000000'00000000
             }
             break;
-
 //SB
         case BEQ:case BNE:case BLT:case BGE:case BLTU:case BGEU:
             rs1 = (code & 0b00000000000011111000000000000000);		//0b00000000'00001111'10000000'00000000
@@ -383,14 +375,13 @@ void ID(){
                 imm |= (0b11111111111111111110000000000000);		//0b11111111'11111111'11100000'00000000
             }
             break;
-
 //I
         case JALR:case LB:case LH:case LW:case LBU:case LHU:case ADDI:
         case SLTI:case SLTIU:case XORI:case ORI:case ANDI: 
             imm  = (code & 0b11111111111100000000000000000000);		//0b11111111'11110000'00000000'00000000
             flag = (code & 0b10000000000000000000000000000000);	//0b10000000'00000000'00000000'00000000
             imm >>= 20;
-            if(flag != 0b0){//高20位符号位扩展1
+            if(flag != 0b0){//高20位符号位扩展
                 imm |= (0b11111111111111111111000000000000);		//0b11111111'11111111'11110000'00000000
             }
             rd  = (code & 0b00000000000000000000111110000000);		//0b00000000'00000000'00001111'10000000
@@ -400,7 +391,6 @@ void ID(){
             rs1 >>= 15;
 
             break;
-
 //S
         case SB:case SH:case SW:
             u32 t1,t2;
@@ -433,7 +423,7 @@ void ID(){
             rs2 >>= 20;
 
             if(opflag == SLLI || opflag == SRLI || opflag == SRAI){
-                shamt = rs2;                                        //注意看shamt可否用rs2代替
+                shamt = rs2;                                        //注意shamt可否用rs2代替
             }
             rd  = (code & 0b00000000000000000000111110000000);		//0b00000000'00000000'00001111'10000000
             rd >>= 7;
@@ -446,7 +436,7 @@ void ID(){
 void EX(){
     object_num obn = ID_EX.obn;
 
-    if(STALL_post_D_F_W_bubble || obn == none){return ;}
+    if(STALL_post_D_F_W_bubble || obn == none || (stall_all && (stall_clk == virtual_clk - 1 || stall_clk == virtual_clk - 2))){return ;}
 
     OPflag opflag = ID_EX.opflag;
     u32 rd = ID_EX.rd,
@@ -462,15 +452,14 @@ void EX(){
         iniiPC = ID_EX.iniPC;
     bool BranchTaken = false;
 
-    u32 ld_dest = 0b0,st_dest = 0b0,ld_flag = 0,st_flag = 0;
-    EX_MEM.esc_flag = 0;    //!!
+    u32 ld_dest = 0b0,st_dest = 0b0,ld_flag = 0,st_flag = 0,esc_flag = 0;
     bool ok = false;
 
     switch (opflag) {
         case LUI:       
             regd = imm;break;
         case AUIPC:      
-            regd = (iniPC) + imm;//  change ! PC -= 4;PC += imm;break;
+            regd = (iniPC) + imm;
             break;
         case JAL:       
             ok = true;
@@ -503,23 +492,21 @@ void EX(){
             break;
 
         case ADDI:
-            //load imm to rd !
             if(imm == 255 && rd == 10){
-                EX_MEM.esc_flag = 1;break;
+                stall_all = 1;
+                stall_clk = virtual_clk;
+                esc_flag = 1;break;
             }
             regd = reg1 + imm;
             break;
-
         case SLTI:     
             if((int)reg1 < (int)imm)regd = 1;
             else regd = 0;
             break;
-
         case SLTIU:     
             if(reg1 < imm)regd = 1;
             else regd = 0;
             break;
-
         case XORI:
             regd = reg1 ^ imm;
             break;
@@ -528,16 +515,15 @@ void EX(){
             break;
         case ANDI:
             regd = reg1 & imm;
-            break;
-            
+            break;   
         case SLLI:    
             regd = reg1 << shamt;
             break;
         case SRLI:
             regd = reg1 >> shamt;
             break;
-        case SRAI:		//change here
-            regd = (u32)((int)reg1 >> shamt);//
+        case SRAI:		
+            regd = (u32)((int)reg1 >> shamt);
             break;
         case ADD:
             regd = reg1 + reg2;
@@ -583,14 +569,14 @@ void EX(){
 
 	printID_EX_Buffer(res_ID_EX);
     Epreforwarding(regd,rd,ld_flag); 
-    RES_EX_MEM_up(obn,ld_dest,ld_flag,st_dest,st_flag,regd,reg2,rd,rs1,rs2,iniPC,predPC,opflag);
+    RES_EX_MEM_up(obn,esc_flag,ld_dest,ld_flag,st_dest,st_flag,regd,reg2,rd,rs1,rs2,iniPC,predPC,opflag);
 }
 
    /*Memrory access*/
 void MEM(){
     object_num obn = EX_MEM.obn;
 
-    if(obn == none){return ;}
+    if(obn == none || (stall_all && stall_clk == virtual_clk - 2)){return ;}
 
     OPflag opflag = EX_MEM.opflag;
     u32 ld_dest = EX_MEM.ld_dest,
@@ -642,18 +628,18 @@ void MEM(){
 	if(st_flag) {
         switch (opflag) {
             case SB:
-                tmp = 0b0;tmp = (reg2 & 0b11111111);//取后八位
+                tmp = 0b0;tmp = (reg2 & 0b11111111);
                 mem[st_dest] = (u8)tmp;
                 break;
 
             case SH:
-                tmp = 0b0;tmp = (reg2 & 0b1111111111111111);//取后16位
+                tmp = 0b0;tmp = (reg2 & 0b1111111111111111);
 				mem[st_dest] = (u8)(tmp);tmp >>= 8;
                 mem[st_dest + 1] = (u8)(tmp);                        
                 break;
                 
             case SW:
-                tmp = 0b0;tmp = (reg2);             //取后16位
+                tmp = 0b0;tmp = (reg2);             
                 for(int i = 0;i < 4; ++i){
                     mem[st_dest + i] = (u8)(tmp);
                     tmp >>= 8;
@@ -678,13 +664,12 @@ void WB(){
 
     Wpreforwarding(regd,rd);
     switch (opflag) {
-        case BEQ:case BNE:case BLT:case BGE:case BLTU:		//AUIPC!!! 
+        case BEQ:case BNE:case BLT:case BGE:case BLTU:
         case BGEU:case SB:case SH:case SW:
             break;
         default:
             if (esc_flag) {
                 eesc = true;
-                //printf("%lf\n",(times / clk));
                 printf("%d\n",(regd & 255u));
                 return ;
             }
@@ -709,5 +694,14 @@ and discard-> discard_clk ! in update !
 7.ld_flag !忘传
 8.reg[0]未置零
 在此代码传递中，中午没有进行reg[0]特判，需要注意用到这种不合法的值
+patch:1.AUIPC !
+      2.有些地方 不能左移四次，因为第一次不用移！！ 
+      3.//in the mem the info is stored in the form of byte  |u8 !
+      
+后：
 9.IF_ID.code = 0b0; !!!!!!!!!!!!
+10.EX MEM依赖 如果直接给EX_MEM赋值，那么可能先出来，也可能出不来
+两个顺序依赖都是更新导致的
+11.updateALL 不能放到前面的原因是 discard_clk + 1 or +2 的问题，时钟周期不同了
+debug技巧！(思路清晰)
 */
