@@ -4,6 +4,7 @@
 #include "stages.hpp"
 #include "global.hpp"
 #include <algorithm>
+#include <ctime>
 using u32 = unsigned int;
 using u8  = unsigned char;
 
@@ -49,6 +50,7 @@ void pipeRUN(){
     set();
     extern bool eesc;
 	eesc = false;
+    srand(time(NULL));
     while(1){
         clk++;
         STAGE::updateALL();
