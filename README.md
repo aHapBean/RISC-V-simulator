@@ -65,11 +65,11 @@ main函数:
 ### **stages.hpp**
 - *namespace STAGE*
     - five stages
-        - `IF()` `ID()` `EX()` `MEM()` `WB`
+        - `IF()` `ID()` `EX()` `MEM()` `WB()`
     
     - forwarding
         - preforwarding
-            - `Epreforwarding` `Mpreforwarding` `Wpreforwarding`
+            - `Epreforwarding()` `Mpreforwarding()` `Wpreforwarding()`
             - `forwarding()`
 
     - update
