@@ -1,9 +1,9 @@
 # RISC-V-simulator
 
 ## 简介
-- 上海交通大学 *2021-2022 6.20-7.3*
-- PPCA课程项目
-- **使用 C++ 模拟 CPU 五级流水**
+- *2021-2022 6.20-7.3*
+- 上海交通大学**PPCA** `Principle and Practice of Computer Algorithm`课程项目
+- **使用 C++ 模拟基于RISC=V指令集的CPU五级流水**
 
 ## 五级流水设计示意图
 
