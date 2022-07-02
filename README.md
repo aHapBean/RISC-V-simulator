@@ -7,11 +7,11 @@
 
 ## 五级流水设计示意图
 
-![]Pipeline_structure.jpg
+![](Pipeline_structure.jpg)
 
 ## 缩写说明
 
-五级流水各阶段
+- 阶段名称缩写说明
 
 | 缩写    | 全称               |
 | ------- | ------------------ |
@@ -20,6 +20,8 @@
 | **EX**  | Execute            |
 | **MEM** | Memory Access      |
 | **WB**  | Write Back         |
+
+- 变量缩写说明
 
 | 缩写       | 全称                 | 说明                     |
 | ---------- | -------------------- | ------------------------ |
@@ -46,7 +48,6 @@
 
 ### **main.cpp**
 main函数:
-- I/O
 - `init()`
 ### **global.hpp**
 - global variables
