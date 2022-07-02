@@ -23,7 +23,7 @@
 | ---------- | -------------------- | ------------------------ |
 | **PC**     | Program Counter      | 待执行的下一条指令地址   |
 | *iniPC*       | Initail PC  | 指令初始取址位置             |
-| *iniPC*       | Initail PC  | 该指令（预测）的下一个取址位置             |
+| *predPC*       | Predicted PC  | 该指令（预测）的下一个取址位置             |
 | *code*    | Insturction          | 32位指令                |
 | *opflag*| Operation Flag| 枚举类型用于区分37种指令|
 | **OPCODE** | Operation Code       |                          |
