@@ -34,8 +34,8 @@ public:
     int predict(u32 code,u32 iniPC){
         if(OPcode == 0b1100011 && (PHT_VALUE & 0b10))return BTB_VALUE;
         return iniPC + 4;
-    }//区分 0x and 0b !!!!!!
-    void update(bool BranchTaken,bool isSuc,u32 iniPC,u32 jumpAddr){//针对分支命令分支是否被采纳
+    }
+    void update(bool BranchTaken,bool isSuc,u32 iniPC,u32 jumpAddr){//针对分支命令
         if(isSuc)++suc;
         ++cnt;
         if(BranchTaken){
