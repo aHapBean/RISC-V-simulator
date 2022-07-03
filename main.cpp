@@ -1,5 +1,5 @@
+#include <iostream>
 #include <cstring>
-#include <fstream>
 #include "cpu.hpp"
 
 void init(cpu * &RISCV){
