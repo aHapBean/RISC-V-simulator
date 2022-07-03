@@ -21,17 +21,17 @@ namespace STAGE{
 
     /*forwarding*/
 void Epreforwarding(u32 regd,u32 rd,u32 ld_flag){
-    ID_EX.Efregd = regd;
-    ID_EX.Efrd   = rd;
-    ID_EX.ld_flag = ld_flag;
+    res_ID_EX.Efregd = regd;
+    res_ID_EX.Efrd   = rd;
+    res_ID_EX.ld_flag = ld_flag;
 }
 void Mpreforwarding(u32 regd,u32 rd){
-    ID_EX.Mfregd = regd;
-    ID_EX.Mfrd   = rd;
+    res_ID_EX.Mfregd = regd;
+    res_ID_EX.Mfrd   = rd;
 }
 void Wpreforwarding(u32 regd,u32 rd){
-    ID_EX.Wfrd = rd;
-    ID_EX.Wfregd = regd;
+    res_ID_EX.Wfrd = rd;
+    res_ID_EX.Wfregd = regd;
 }
 void forwarding(){
     //the forwarding after STALL
@@ -60,6 +60,11 @@ void forwarding(){
 
     /*update & discard*/
 void updateALL(){
+    /*out -> in*/
+    ID_EX.Efregd = res_ID_EX.Efregd;ID_EX.Efrd = res_ID_EX.Efrd;ID_EX.ld_flag = res_ID_EX.ld_flag;
+    ID_EX.Mfregd = res_ID_EX.Mfregd;ID_EX.Mfrd = res_ID_EX.Mfrd;
+    ID_EX.Wfregd = res_ID_EX.Wfregd;ID_EX.Wfrd = res_ID_EX.Wfrd;
+
     if(discard_flag == 2 || STALL_post_D_F_W_bubble && discard_flag)printf("false\n");
     if(discard_flag && discard_clk == virtual_clk){
     	PC = res_EX_MEM.iniPC;

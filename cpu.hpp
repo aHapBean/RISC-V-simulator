@@ -59,8 +59,8 @@ void pipeRUN(){
         STAGE::ID();
         STAGE::MEM();
         STAGE::WB();
-        //MEM/WB
-        STAGE::EX();        
+        //MEM/WB();
+        STAGE::EX(); 
         STAGE::IF();
         */
         virtual_clk++;
