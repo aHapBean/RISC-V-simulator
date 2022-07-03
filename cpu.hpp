@@ -51,6 +51,7 @@ void pipeRUN(){
     extern bool eesc;
 	eesc = false;
     srand(time(NULL));
+    clk = 0;
     while(1){
         clk++;
         STAGE::updateALL();
